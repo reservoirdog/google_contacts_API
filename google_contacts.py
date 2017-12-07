@@ -2,6 +2,8 @@ import webbrowser
 import requests
 import json
 import os.path
+import argparse
+import os.path
 
 from oauth2client import client
 
@@ -27,7 +29,9 @@ class GoogleContacts(object):
         :return: Credentials to that can be used by other processes
         """
         if os.path.isfile(self.credentials_file):
+
             f = open(self.credentials_file, "r")
+
             credentials = client.OAuth2Credentials.from_json(f.read())
             f.close()
         else:
@@ -125,7 +129,7 @@ class GoogleContacts(object):
             creds = self._acquire_oauth2_credentials()
             self._write_credentials(creds)
 
-        with open('credentials.json', 'r') as f:
+        with open(self.credentials_file, 'r') as f:
             data = json.load(f)
 
             at = data['access_token']
@@ -181,7 +185,55 @@ if __name__ == '__main__':
         
          
         """
-        service = GoogleContacts('credentials.json', 'client_secret.json')
+        # Set Default values that can be over written
+        creds = 'credentials.json'
+        secret = 'client_secret.json'
 
-        service.get_all_contacts('exmaple.com')
+        # Setup Arg parsing
+        parser = argparse.ArgumentParser(description='Google Contacts API Scraper')
+        req = parser.add_argument_group('Required Names Arguments')
+        req.add_argument('-d', '--domain', help='The name of the domain to be used (i.e. example.com', required=True)
+        req.add_argument('-a', '--action', help='Action to be completed. Options include '
+                                                'CREATE, DELETE, UPDATE', required=True)
+        req.add_argument('FILE', help='File to be parsed for all actions')
+
+        parser.add_argument('-c', '--credentials', help='Credentials file to write back to [OPTIONAL]')
+        parser.add_argument('-s', '--secret', help='Secrets file to read from to obtain a new token [OPTIONAL]')
+
+        args = parser.parse_args()
+
+        if os.path.isfile(creds):
+            os.remove(creds)
+
+        # Check for override values
+        if args.credentials:
+            creds = args.credentials
+        if args.secret:
+            secret = args.secret
+
+        # Check for LIST action
+        if args.action.lower() == 'list':
+            service = GoogleContacts(creds, secret)
+            results = service.get_all_contacts(args.domain)
+            print(results)
+
+        # Check for CREATE
+        if args.action.lower() == 'create':
+            service = GoogleContacts(creds, secret)
+            results = service.get_all_contacts(args.domain)
+            print(results)
+
+        # Check for DELETE
+        if args.action.lower() == 'delete':
+            service = GoogleContacts(creds, secret)
+            results = service.get_all_contacts(args.domain)
+            print(results)
+
+        # Check for UPDATE
+        if args.action.lower() == 'update':
+            service = GoogleContacts(creds, secret)
+            results = service.get_all_contacts(args.domain)
+            print(results)
+
+
 
